@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  labels:
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: php
+        tier: backend
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: php
+          image: php-fpm_custom:latest
+          imagePullPolicy: Never
+          volumeMounts:
+            - name: code
+              mountPath: /code
+#          lifecycle:
+#            postStart:
+#              exec:
+#                command: [ "/bin/sh", "-c", "cp -r /var/www/html/. /code" ]
+      volumes:
+        - name: code
+          persistentVolumeClaim:
+            claimName: code
+      #     volumeMounts:
+      #       - mountPath: /var/www/storage/logs
+      #         name: storage-logs
+      #       - mountPath:  /var/www/html
+      #         name: app-volume
+      # volumes:
+      #   - name: storage-logs
+      #     persistentVolumeClaim:
+      #       claimName: storage-logs-pvc
+      #   - name: app-volume
+      #     hostPath:
+      #       path: /Users/yoochan/Documents/k8s/demo-k8s
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php
+  labels:
+    tier: backend
+spec:
+  selector:
+    app: php
+    tier: backend
+  ports:
+    - protocol: TCP
+      port: 9000

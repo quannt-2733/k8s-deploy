@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: nginx
+        tier: backend
+    spec:
+      volumes:
+        - name: code
+          persistentVolumeClaim:
+            claimName: code
+        - name: config
+          configMap:
+            name: nginx-config
+            items:
+              - key: config
+                path: site.conf
+      containers:
+        - name: nginx
+          #image: nginx-custom:latest
+          #imagePullPolicy: Never
+          image: nginx:1.23.0
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: code
+              mountPath: /code
+            - name: config
+              mountPath: /etc/nginx/conf.d
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    tier: backend
+spec:
+  selector:
+    app: nginx
+    tier: backend
+  ports:
+    - protocol: TCP
+      port: 80
